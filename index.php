@@ -1,13 +1,20 @@
 <?php
- 
+
 // get the HTTP method, path and body of the request
 $method = $_SERVER['REQUEST_METHOD'];
 $request = explode('/', trim($_SERVER['PATH_INFO'],'/'));
 $input = json_decode(file_get_contents('php://input'),true);
  
 // connect to the mysql database
-$link = mysqli_connect('localhost', 'root', '', 'i_spy_database');
-mysqli_set_charset($link,'utf8');
+$dsn = 'mysql:dbname=i_spy;host=localhost';
+$user = 'i_spy';
+$password = 'asn_hmin205_2017';
+
+try {
+    $dbh = new PDO($dsn, $user, $password);
+} catch (PDOException $e) {
+    echo 'Connexion échouée : ' . $e->getMessage();
+}
  
 // retrieve the table and key from the path
 $table = preg_replace('/[^a-z0-9_]+/i','',array_shift($request));
@@ -15,16 +22,15 @@ $key = array_shift($request)+0;
  
 // escape the columns and values from the input object
 $columns = preg_replace('/[^a-z0-9_]+/i','',array_keys($input));
-$values = array_map(function ($value) use ($link) {
-    if ($value===null) return null;
-    return mysqli_real_escape_string($link,(string)$value);
-},array_values($input));
+$values = array_values($input);
  
 // build the SET part of the SQL command
 $set = '';
+$param = array();
 for ($i=0;$i<count($columns);$i++) {
     $set.=($i>0?',':'').'`'.$columns[$i].'`=';
-    $set.=($values[$i]===null?'NULL':'"'.$values[$i].'"');
+    $set.=($values[$i]===null?'NULL':':'.$columns[$i]);
+    $param[':'.$columns[$i]] = $values[$i];
 }
  
 // create SQL based on HTTP method
@@ -40,30 +46,22 @@ case 'DELETE':
 }
  
 // excecute SQL statement
-$result = mysqli_query($link, $sql);
- 
+$stmt = $dbh->prepare($sql);
+
+var_dump($sql);die;
+
 // die if SQL statement failed
-if (!$result) {
-    echo mysqli_error($link);
+if ($stmt->execute($param)) {
+    http_response_code(500);
 } else {
  
     // print results, insert id or affected row count
     if ($method == 'GET') {
-        if (!$key) echo '[';
-        for ($i=0;$i<mysqli_num_rows($result);$i++) {
-            echo ($i>0?',':'').json_encode(mysqli_fetch_object($result));
-        }
-        if (!$key) echo ']';
+    	echo json_encode($stmt->fetchAll());
     } elseif ($method == 'POST') {
-        echo mysqli_insert_id($link);
+        echo PDO::lastInsertId();
         
         // http created ressource status
-        http_response_code(201); 
-
-    } else {
-        echo mysqli_affected_rows($link);
+        http_response_code(201);
     }
 }
-
-// close mysql connection
-mysqli_close($link);
