@@ -35,6 +35,11 @@ class Phone implements \JsonSerializable
      */
     private $password;
 
+    /**
+     * @ORM\OneToMany(targetEntity="PositionGPS", mappedBy="phone")
+     */
+    private $positionsGPS;
+
 
     /**
      * Get id
@@ -99,7 +104,49 @@ class Phone implements \JsonSerializable
         return array(
             'id' => $this->id,
             'login' => $this->login,
+            'positionsGPS' => $this->getPositionsGPS()->toArray(),
         );
     }
-}
 
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->positionsGPS = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
+     * Add positionGPS
+     *
+     * @param \AppBundle\Entity\PositionGPS $positionGPS
+     *
+     * @return Phone
+     */
+    public function addPositionGPS(\AppBundle\Entity\PositionGPS $positionGPS)
+    {
+        $this->positionsGPS[] = $positionGPS;
+
+        return $this;
+    }
+
+    /**
+     * Remove positionGPS
+     *
+     * @param \AppBundle\Entity\PositionGPS $positionsGPS
+     */
+    public function removePositionGPS(\AppBundle\Entity\PositionGPS $positionGPS)
+    {
+        $this->positionsGPS->removeElement($positionGPS);
+    }
+
+    /**
+     * Get positionsGPS
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getPositionsGPS()
+    {
+        return $this->positionsGPS;
+    }
+}
