@@ -28,26 +28,31 @@ class PositionGPSController extends Controller
 
        if($phone->getLogin() == $phoneData['login'] && $phone->getPassword() == $phoneData['password']){
 	       if($phone){
-				$data = json_decode($request->request->get('json'));
+			   $data = json_decode($request->request->get('json'));
 
-		       $positionsGPS = new PositionGPS();
-		       $positionsGPS->setLatitude($data->latitude);
-		       $positionsGPS->setLongitude($data->longitude);
-		       $positionsGPS->setPays($data->pays);
-		       $positionsGPS->setVille($data->ville);
-		       $positionsGPS->setCodePostal($data->codePostal);
-		       $positionsGPS->setAdresse($data->adresse);
-		       $positionsGPS->setDatePosition(new \DateTime($data->datePosition));
-		       $positionsGPS->setPhone($phone);
+			   $em = $this->getDoctrine()->getManager();
 
-		       $em = $this->getDoctrine()->getManager();
-		       $em->persist($positionsGPS);
+			   foreach ($data as $pos) {
+			   	   $positionsGPS = new PositionGPS();
+
+			       $positionsGPS->setLatitude($pos->latitude);
+			       $positionsGPS->setLongitude($pos->longitude);
+			       $positionsGPS->setPays($pos->pays);
+			       $positionsGPS->setVille($pos->ville);
+			       $positionsGPS->setCodePostal($pos->codePostal);
+			       $positionsGPS->setAdresse($pos->adresse);
+			       $positionsGPS->setDatePosition(new \DateTime($pos->datePosition));
+			       $positionsGPS->setPhone($phone);
+
+			       $em->persist($positionsGPS);
+			   }
 
 		       try{
 		           $em->flush();
 		           return $this->json(array('success' => true, 'data' => $positionsGPS));
 		       }
 		       catch(\Exception $e){
+		       		var_dump($data);
 		           return $this->json(array('success' => false, 'message' => $e->getMessage()));
 		       }
 			}

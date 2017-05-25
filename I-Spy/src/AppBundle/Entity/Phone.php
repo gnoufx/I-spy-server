@@ -37,8 +37,14 @@ class Phone implements \JsonSerializable
 
     /**
      * @ORM\OneToMany(targetEntity="PositionGPS", mappedBy="phone")
+     * @ORM\OrderBy({"datePosition" = "DESC"})
      */
     private $positionsGPS;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Contact", mappedBy="phone")
+     */
+    private $contacts;
 
 
     /**
@@ -104,7 +110,6 @@ class Phone implements \JsonSerializable
         return array(
             'id' => $this->id,
             'login' => $this->login,
-            'positionsGPS' => $this->getPositionsGPS()->toArray(),
         );
     }
 
@@ -148,5 +153,63 @@ class Phone implements \JsonSerializable
     public function getPositionsGPS()
     {
         return $this->positionsGPS;
+    }
+
+    /**
+     * Add positionsGP
+     *
+     * @param \AppBundle\Entity\PositionGPS $positionsGP
+     *
+     * @return Phone
+     */
+    public function addPositionsGP(\AppBundle\Entity\PositionGPS $positionsGP)
+    {
+        $this->positionsGPS[] = $positionsGP;
+
+        return $this;
+    }
+
+    /**
+     * Remove positionsGP
+     *
+     * @param \AppBundle\Entity\PositionGPS $positionsGP
+     */
+    public function removePositionsGP(\AppBundle\Entity\PositionGPS $positionsGP)
+    {
+        $this->positionsGPS->removeElement($positionsGP);
+    }
+
+    /**
+     * Add contact
+     *
+     * @param \AppBundle\Entity\Contact $contact
+     *
+     * @return Phone
+     */
+    public function addContact(\AppBundle\Entity\Contact $contact)
+    {
+        $this->contacts[] = $contact;
+
+        return $this;
+    }
+
+    /**
+     * Remove contact
+     *
+     * @param \AppBundle\Entity\Contact $contact
+     */
+    public function removeContact(\AppBundle\Entity\Contact $contact)
+    {
+        $this->contacts->removeElement($contact);
+    }
+
+    /**
+     * Get contacts
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getContacts()
+    {
+        return $this->contacts;
     }
 }

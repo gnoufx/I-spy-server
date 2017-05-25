@@ -3,9 +3,12 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\User;
+use AppBundle\Entity\Phone;
+use AppBundle\Entity\PositionGPS;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -144,17 +147,27 @@ class UserController extends Controller
     public function newPhoneAction(Request $request, User $user)
     {
     	$userData = $request->query->get('user');
-    	$phoneData = $request->query->get('phone');
-    	if($user->getMail() == $userData['mail'] && $user->getPassword() == $userData['password']){
-    		$em = $this->getDoctrine()->getManager();
-    		$phone = $em->getRepository('AppBundle:Phone')->findOneBy($phoneData);
-    		if($phone){
+    	$phoneData = json_decode($request->request->get('json'));
+    	
+	if($user->getMail() == $userData['mail'] && $user->getPassword() == $userData['password']){
+    		
+		$em = $this->getDoctrine()->getManager();
+    		$phone = $em->getRepository('AppBundle:Phone')->findOneBy(array(
+					'login' => $phoneData->login, 
+					'password' => $phoneData->password));
+    		
+		if($phone) {
+
     			$user->addPhone($phone);
     			$em->persist($user);
     			try{
     				$em->flush();
-    				return $this->json(array('success' => true, 'data' => $user->getPhones()->getValues()));
+					
+    				return $this->json(array('success' => true, 'data' => $phone));
     			}
+			catch(\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e){
+				return $this->json(array('success' => false, 'message' => "uniquePhone"));
+			}
     			catch(\Exception $e){
     				return $this->json(array('success' => false, 'message' => "error"));
     			}
@@ -166,4 +179,31 @@ class UserController extends Controller
     	return $this->json(array('success' => false, 'message' => "wrongUser"));
     }
 
+    /**
+     * Get all GPS positions from phone {id} of user {id}
+     * @Route("user/{id}/phone/{phone_id}/position_gps", name="user_phone_gps_show")
+     * @ParamConverter("phone", class="AppBundle:Phone", options={"id" = "phone_id"})
+     * @Method("GET")
+     */
+     public function getPositionGPSFromPhone (Request $request, User $user, Phone $phone)
+     {
+        $userData = $request->query->get('user');
+		$last = (int)$request->query->get('last');
+
+		if($user->getMail() == $userData['mail'] && $user->getPassword() == $userData['password']){
+    		
+			if ($last) {
+				$position_gps = $phone->getPositionsGPS()->get(0);		   			
+			} 
+			else{
+				$position_gps = $phone->getPositionsGPS()->getValues();
+			}
+
+			$em = $this->getDoctrine()->getManager();
+		
+			return $this->json(array('success' => true, 'data' => $position_gps));
+		}
+    	return $this->json(array('success' => false, 'message' => "wrongUser"));
+
+     }	
 }
