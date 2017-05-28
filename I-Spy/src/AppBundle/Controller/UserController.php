@@ -188,21 +188,40 @@ class UserController extends Controller
      public function getPositionGPSFromPhone (Request $request, User $user, Phone $phone)
      {
         $userData = $request->query->get('user');
-		$last = (int)$request->query->get('last');
+	$last = (int)$request->query->get('last');
 
-		if($user->getMail() == $userData['mail'] && $user->getPassword() == $userData['password']){
-    		
-			if ($last) {
-				$position_gps = $phone->getPositionsGPS()->get(0);		   			
-			} 
-			else{
-				$position_gps = $phone->getPositionsGPS()->getValues();
-			}
+	if($user->getMail() == $userData['mail'] && $user->getPassword() == $userData['password']){
 
-			$em = $this->getDoctrine()->getManager();
-		
-			return $this->json(array('success' => true, 'data' => $position_gps));
+		if ($last) {
+			$position_gps = $phone->getPositionsGPS()->get(0);		   			
+		} 
+		else{
+			$position_gps = $phone->getPositionsGPS()->getValues();
 		}
+
+
+		return $this->json(array('success' => true, 'data' => $position_gps));
+	}
+    	return $this->json(array('success' => false, 'message' => "wrongUser"));
+
+     }
+	
+    /**
+     * Get all contacts from phone {phone_id} of user {id}
+     * @Route("user/{id}/phone/{phone_id}/contacts", name="user_phone_contacts_show")
+     * @ParamConverter("phone", class="AppBundle:Phone", options={"id" = "phone_id"})
+     * @Method("GET")
+     */
+     public function getContactsFromPhone (Request $request, User $user, Phone $phone)
+     {
+        $userData = $request->query->get('user');
+
+	if($user->getMail() == $userData['mail'] && $user->getPassword() == $userData['password']){
+    		
+		$contacts = $phone->getContacts()->getValues();
+
+		return $this->json(array('success' => true, 'data' => $contacts));
+	}
     	return $this->json(array('success' => false, 'message' => "wrongUser"));
 
      }	

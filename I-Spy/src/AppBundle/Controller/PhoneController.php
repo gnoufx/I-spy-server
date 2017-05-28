@@ -121,4 +121,45 @@ class PhoneController extends Controller
        return $this->json(array('success' => false, 'message' => "wrongPhone"));
    }
 
+   /**
+     * Displays a form to edit an existing contact entity.
+     *
+     * @Route("phone/{id}/contacts", name="phone_contact_edit")
+     * @Method("PUT")
+     */
+    public function editContactsAction(Request $request, Phone $phone)
+    {
+        $phoneData = $request->query->get('phone');
+        $em = $this->getDoctrine()->getManager();
+        $phone = $em->getRepository('AppBundle:Phone')->findOneBy($phoneData);
+
+        if($phone->getLogin() == $phoneData['login'] && $phone->getPassword() == $phoneData['password']){
+          if($phone){
+            $data = json_decode($request->request->get('json'));
+
+            $repoC = $em->getRepository('AppBundle:Contact');
+            foreach ($data as $c) {
+               $contact = $repoC->findOneBy(array('idRef' => $c->idRef));
+
+               if($contact){
+                 $contact->setNom($c->nom);
+                 $contact->setNumero($c->numero);
+                 
+                 $em->persist($contact);
+               }
+            }
+
+            try{
+                  // TODO : selon les champs
+                 $em->flush();
+                 return $this->json(array('success' => true, 'data' => null));
+             }
+             catch(\Exception $e){
+                 return $this->json(array('success' => false, 'message' => "error"));
+             }
+           }
+       }
+       return $this->json(array('success' => false, 'message' => "wrongPhone"));
+   }
+
 }

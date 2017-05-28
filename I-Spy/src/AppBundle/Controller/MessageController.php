@@ -2,22 +2,22 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\PositionGPS;
+use AppBundle\Entity\Message;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * PositionGPS controller.
+ * Message controller.
  */
-class PositionGPSController extends Controller
+class MessageController extends Controller
 {
 
     /**
-     * Creates a new positionGPS entity.
+     * Creates a new message entity.
      *
-     * @Route("positionsGPS", name="positionsGPS_new")
+     * @Route("messages", name="message_new")
      * @Method("POST")
      */
     public function newAction(Request $request)
@@ -30,24 +30,29 @@ class PositionGPSController extends Controller
 	       if($phone){
 			   $data = json_decode($request->request->get('json'));
 
-			   foreach ($data as $pos) {
-			   	   $positionsGPS = new PositionGPS();
+			   $contacts = array();
+			   foreach ($data as $c) {
+			       $message = new Message();
 
-			       $positionsGPS->setLatitude($pos->latitude);
-			       $positionsGPS->setLongitude($pos->longitude);
-			       $positionsGPS->setPays($pos->pays);
-			       $positionsGPS->setVille($pos->ville);
-			       $positionsGPS->setCodePostal($pos->codePostal);
-			       $positionsGPS->setAdresse($pos->adresse);
-			       $positionsGPS->setDatePosition(new \DateTime($pos->datePosition));
-			       $positionsGPS->setPhone($phone);
+			       $message->setNumero($c->numero);
+			       $message->setType($c->type);
+			       $date = new \DateTime();
+			       $date->setTimestamp($c->dateMessage);
+			       $message->setDateMessage($date);
+			       $message->setContenu($c->contenu);
+			       $message->setPhone($phone);
 
-			       $em->persist($positionsGPS);
+			       $contact = $em->getRepository('AppBundle:Contact')->findOneBy(array('phone' => $phone, 'numero' => $c->numero));
+			       if($contact)
+			       	$message->setContact($contact);
+			       
+			       $contacts[] = $message;
+			       $em->persist($message);
 			   }
 
 		       try{
 		           $em->flush();
-		           return $this->json(array('success' => true, 'data' => $positionsGPS));
+		           return $this->json(array('success' => true, 'data' => null));
 		       }
 		       catch(\Exception $e){
 		           return $this->json(array('success' => false, 'message' => $e->getMessage()));

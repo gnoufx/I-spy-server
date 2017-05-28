@@ -17,7 +17,7 @@ class ContactController extends Controller
     /**
      * Creates a new contact entity.
      *
-     * @Route("contact", name="contact_new")
+     * @Route("contacts", name="contact_new")
      * @Method("POST")
      */
     public function newAction(Request $request)
@@ -28,20 +28,24 @@ class ContactController extends Controller
 
        if($phone->getLogin() == $phoneData['login'] && $phone->getPassword() == $phoneData['password']){
 	       if($phone){
-				$data = json_decode($request->request->get('json'));
+			   $data = json_decode($request->request->get('json'));
 
-		       $contact = new Contact();
-		       $contact->setNom($data->nom);
-		       $contact->setNumero($data->numero);
-		       $contact->setIdRef($data->idRef);
-		       $contact->setPhone($phone);
+			   $contacts = array();
+			   foreach ($data as $c) {
+			       $contact = new Contact();
 
-		       $em = $this->getDoctrine()->getManager();
-		       $em->persist($contact);
+			       $contact->setNom($c->nom);
+			       $contact->setNumero($c->numero);
+			       $contact->setIdRef($c->idRef);
+			       $contact->setPhone($phone);
+			       
+			       $contacts[] = $contact;
+			       $em->persist($contact);
+			   }
 
 		       try{
 		           $em->flush();
-		           return $this->json(array('success' => true, 'data' => $contact));
+		           return $this->json(array('success' => true, 'data' => null));
 		       }
 		       catch(\Exception $e){
 		           return $this->json(array('success' => false, 'message' => $e->getMessage()));

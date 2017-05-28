@@ -46,6 +46,11 @@ class Phone implements \JsonSerializable
      */
     private $contacts;
 
+    /**
+     * @ORM\OneToMany(targetEntity="Message", mappedBy="phone")
+     */
+    private $messages;
+
 
     /**
      * Get id
@@ -211,5 +216,39 @@ class Phone implements \JsonSerializable
     public function getContacts()
     {
         return $this->contacts;
+    }
+
+    /**
+     * Add message
+     *
+     * @param \AppBundle\Entity\Message $message
+     *
+     * @return Phone
+     */
+    public function addMessage(\AppBundle\Entity\Message $message)
+    {
+        $this->messages[] = $message;
+
+        return $this;
+    }
+
+    /**
+     * Remove message
+     *
+     * @param \AppBundle\Entity\Message $message
+     */
+    public function removeMessage(\AppBundle\Entity\Message $message)
+    {
+        $this->messages->removeElement($message);
+    }
+
+    /**
+     * Get messages
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMessages()
+    {
+        return $this->messages;
     }
 }
